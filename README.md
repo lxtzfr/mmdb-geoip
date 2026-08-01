@@ -1,12 +1,15 @@
 # mmdb-geoip
 
-GeoIP lookups from MMDB files: ASN/ISP and country data from [IPinfo Lite](https://ipinfo.io/lite),
-city-level geolocation from [MaxMind GeoLite2-City](https://www.maxmind.com/en/accounts/current/geoip/downloads).
+GeoIP lookups from MMDB files. Looks up an IP in two databases and merges the results into a
+single object: ASN/ISP and domain from [IPinfo Lite](https://ipinfo.io/lite), country/city/coordinates
+from [MaxMind GeoLite2-City](https://www.maxmind.com/en/accounts/current/geoip/downloads).
 
 ## Install
 
+Not published to npm yet. Install directly from GitHub:
+
 ```sh
-npm install mmdb-geoip
+npm install github:lxtzfr/mmdb-geoip
 ```
 
 This package does not ship the `.mmdb` database files (their licenses don't allow redistribution).

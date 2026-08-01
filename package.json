@@ -1,0 +1,36 @@
+{
+  "name": "mmdb-geoip",
+  "version": "0.1.0",
+  "description": "GeoIP lookups from MMDB files (MaxMind GeoLite2 + IPinfo Lite)",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxtzfr/mmdb-geoip.git"
+  },
+  "scripts": {
+    "prepare": "tsc",
+    "build": "tsc",
+    "update-mmdb": "tsx scripts/update-mmdb.ts"
+  },
+  "dependencies": {
+    "mmdb-lib": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tar": "^7.5.22",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
