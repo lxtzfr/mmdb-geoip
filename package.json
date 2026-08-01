@@ -15,6 +15,9 @@
   "files": [
     "dist"
   ],
+  "bin": {
+    "mmdb-geoip-update": "./dist/bin/update-mmdb.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lxtzfr/mmdb-geoip.git"
@@ -22,14 +25,14 @@
   "scripts": {
     "prepare": "tsc",
     "build": "tsc",
-    "update-mmdb": "tsx scripts/update-mmdb.ts"
+    "update-mmdb": "tsx src/bin/update-mmdb.ts"
   },
   "dependencies": {
-    "mmdb-lib": "^3.0.3"
+    "mmdb-lib": "^3.0.3",
+    "tar": "^7.5.22"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
-    "tar": "^7.5.22",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2"
   }

@@ -1,7 +1,7 @@
 import * as mmdb from 'mmdb-lib'
 import type { CityResponse } from 'mmdb-lib'
 import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
+import path from 'path'
 import type { GeoIpInfo, GeoIpServiceOptions } from './types.js'
 import { isPublicIp } from './ip.js'
 
@@ -11,14 +11,12 @@ interface IpinfoLiteResponse {
   as_domain?: string
 }
 
-const DEFAULT_DATA_DIR = fileURLToPath(new URL('../data', import.meta.url))
-
 export class GeoIpService {
   private asnReader: mmdb.Reader<any>
   private geoReader: mmdb.Reader<CityResponse>
 
   constructor(options: GeoIpServiceOptions = {}) {
-    const dataDir = options.dataDir ?? process.env.GEOIP_DATA_DIR ?? DEFAULT_DATA_DIR
+    const dataDir = options.dataDir ?? path.resolve(process.cwd(), process.env.GEOIP_DATA_DIR ?? 'data')
     const asnDbPath = options.asnDbPath ?? `${dataDir}/ipinfo_lite.mmdb`
     const cityDbPath = options.cityDbPath ?? `${dataDir}/GeoLite2-City.mmdb`
 

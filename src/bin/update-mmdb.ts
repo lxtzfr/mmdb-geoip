@@ -1,10 +1,15 @@
-import { createWriteStream, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from 'fs'
+#!/usr/bin/env node
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from 'fs'
 import { pipeline } from 'stream/promises'
 import { tmpdir } from 'os'
 import path from 'path'
 import { x as extractTar } from 'tar'
 
-const DATA_DIR = path.resolve(import.meta.dirname, '../data')
+if (existsSync(path.resolve(process.cwd(), '.env'))) {
+  process.loadEnvFile()
+}
+
+const DATA_DIR = path.resolve(process.cwd(), process.env.GEOIP_DATA_DIR ?? 'data')
 
 async function download(url: string, headers: Record<string, string>): Promise<Response> {
   const res = await fetch(url, { headers })
