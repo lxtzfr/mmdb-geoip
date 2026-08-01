@@ -63,10 +63,10 @@ async function updateMaxmindCity() {
 
 async function main() {
   mkdirSync(DATA_DIR, { recursive: true })
-  await Promise.all([updateIpinfoLite(), updateMaxmindCity()])
+  const results = await Promise.allSettled([updateIpinfoLite(), updateMaxmindCity()])
+  const failures = results.filter(r => r.status === 'rejected')
+  for (const failure of failures) console.error(failure.reason)
+  if (failures.length > 0) process.exit(1)
 }
 
-main().catch(err => {
-  console.error(err)
-  process.exit(1)
-})
+main()
