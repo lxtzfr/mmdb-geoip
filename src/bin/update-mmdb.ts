@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from 'fs'
+import { createHash } from 'crypto'
+import { createWriteStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync } from 'fs'
 import { pipeline } from 'stream/promises'
 import { tmpdir } from 'os'
 import path from 'path'
@@ -10,6 +11,11 @@ if (existsSync(path.resolve(process.cwd(), '.env'))) {
 }
 
 const DATA_DIR = path.resolve(process.cwd(), process.env.GEOIP_DATA_DIR ?? 'data')
+
+function md5File(file: string): string | null {
+  if (!existsSync(file)) return null
+  return createHash('md5').update(readFileSync(file)).digest('hex')
+}
 
 async function download(url: string, headers: Record<string, string>): Promise<Response> {
   const res = await fetch(url, { headers })
@@ -24,9 +30,24 @@ async function updateIpinfoLite() {
     return
   }
 
-  console.log('Downloading IPinfo Lite (ASN + country) database...')
-  const res = await download(`https://ipinfo.io/data/ipinfo_lite.mmdb?token=${token}`, {})
+  const url = `https://ipinfo.io/data/ipinfo_lite.mmdb?token=${token}`
   const dest = path.join(DATA_DIR, 'ipinfo_lite.mmdb')
+
+  // The redirect target's ETag is the file's md5 — compare it against the local
+  // file's own hash instead of tracking state separately.
+  const redirect = await fetch(url, { redirect: 'manual' })
+  const location = redirect.headers.get('location')
+  if (location) {
+    const head = await fetch(location, { method: 'HEAD' })
+    const remoteMd5 = head.headers.get('etag')?.replace(/"/g, '')
+    if (remoteMd5 && remoteMd5 === md5File(dest)) {
+      console.log('IPinfo Lite is already up to date')
+      return
+    }
+  }
+
+  console.log('Downloading IPinfo Lite (ASN + country) database...')
+  const res = await download(url, {})
   await pipeline(res.body as any, createWriteStream(dest))
   console.log(`Wrote ${dest}`)
 }
@@ -39,12 +60,24 @@ async function updateMaxmindCity() {
     return
   }
 
-  console.log('Downloading MaxMind GeoLite2-City database...')
+  const url = 'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz'
   const auth = Buffer.from(`${accountId}:${licenseKey}`).toString('base64')
-  const res = await download(
-    'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz',
-    { Authorization: `Basic ${auth}` },
-  )
+  const headers = { Authorization: `Basic ${auth}` }
+  const dest = path.join(DATA_DIR, 'GeoLite2-City.mmdb')
+
+  // The ETag is of the .tar.gz, not the extracted .mmdb, so compare dates
+  // instead: skip if the remote file is no newer than what we already have.
+  if (existsSync(dest)) {
+    const head = await fetch(url, { method: 'HEAD', headers })
+    const remoteLastModified = head.headers.get('last-modified')
+    if (remoteLastModified && new Date(remoteLastModified) <= statSync(dest).mtime) {
+      console.log('GeoLite2-City is already up to date')
+      return
+    }
+  }
+
+  console.log('Downloading MaxMind GeoLite2-City database...')
+  const res = await download(url, headers)
 
   const tmpDir = mkdtempSync(path.join(tmpdir(), 'mmdb-geoip-'))
   const tarPath = path.join(tmpDir, 'GeoLite2-City.tar.gz')
@@ -54,9 +87,7 @@ async function updateMaxmindCity() {
   const extractedDir = readdirSync(tmpDir).find(name => name.startsWith('GeoLite2-City_'))
   if (!extractedDir) throw new Error('Could not find extracted GeoLite2-City directory')
 
-  const src = path.join(tmpDir, extractedDir, 'GeoLite2-City.mmdb')
-  const dest = path.join(DATA_DIR, 'GeoLite2-City.mmdb')
-  renameSync(src, dest)
+  renameSync(path.join(tmpDir, extractedDir, 'GeoLite2-City.mmdb'), dest)
   rmSync(tmpDir, { recursive: true, force: true })
   console.log(`Wrote ${dest}`)
 }
