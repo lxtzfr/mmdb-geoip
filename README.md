@@ -21,14 +21,17 @@ You need to download them yourself with the bundled script, or point the service
 IPINFO_TOKEN=xxx \
 MAXMIND_ACCOUNT_ID=xxx \
 MAXMIND_LICENSE_KEY=xxx \
-npm run update-mmdb
+npx mmdb-geoip-update
 ```
+
+A `.env` file in the current directory is loaded automatically if present.
 
 - `IPINFO_TOKEN`: free token from your [IPinfo dashboard](https://ipinfo.io/signup).
 - `MAXMIND_ACCOUNT_ID` / `MAXMIND_LICENSE_KEY`: from your [MaxMind account](https://www.maxmind.com/en/accounts/current/license-key).
 
-Either pair can be omitted to skip that database. Files are written to `./data` next to the package
-(or wherever `GEOIP_DATA_DIR` points).
+Either pair can be omitted to skip that database. Files are written to `./data` in the current
+directory (or wherever `GEOIP_DATA_DIR` points) — safe to re-run often (e.g. before every deploy):
+each database's remote version is checked first and the download is skipped if nothing changed.
 
 ## Usage
 
